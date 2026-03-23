@@ -1,0 +1,23 @@
+# Flutter/Dart by default
+**/ios/Flutter/.last_build_id
+**/pubspec.lock
+**/build/    
+**/dart_tool/
+**/.dart_tool/
+**/packages/    
+**/web/.dart_tool/
+
+# Android by default
+**/android/build/
+**/android/app/build/    
+**/android/.gradle
+**/gradle-wrapper.jar
+**/gradle-wrapper.properties
+**/local.properties
+
+# Other files
+*.iml
+*.hprof
+*.log
+*.apk
+*.ap_
