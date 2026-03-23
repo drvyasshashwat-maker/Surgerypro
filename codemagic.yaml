@@ -1,0 +1,17 @@
+workflows:
+  build:
+    name: Build & Deploy
+    scripts:
+      - name: Install Flutter
+        script: |
+          git clone -b stable https://github.com/flutter/flutter.git
+          export PATH="\$PATH:\$PWD/flutter/bin"
+      - name: Run Flutter pub get
+        script: flutter pub get
+      - name: Build APK
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+    environment:
+      flutter: stable
+      android: latest
