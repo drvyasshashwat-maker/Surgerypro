@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       groups:
-        - openai_credentials 
+        - api_keys # Recommended: Rename your Codemagic group to 'api_keys'
       flutter: stable
     scripts:
       - name: Get dependencies
@@ -14,7 +14,6 @@ workflows:
       - name: Build Flutter APK
         script: |
           flutter build apk --release \
-            --dart-define=OPENAI_API_KEY=$OPENAI_API_KEY \
             --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
