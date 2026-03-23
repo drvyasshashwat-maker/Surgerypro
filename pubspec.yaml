@@ -1,5 +1,8 @@
 dependencies:
   flutter:
     sdk: flutter
-  flutter_dotenv: '>=3.0.0 <5.0.0'
-
+  # The new standard for Flutter AI in 2026
+  firebase_core: ^4.10.0
+  firebase_ai: ^1.2.0 
+  # Optional: Keep this if you aren't ready to migrate to Firebase yet
+  # google_generative_ai: ^1.1.0
