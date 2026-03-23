@@ -1,17 +1,18 @@
-workflows:
-  build:
-    name: Build & Deploy
-    scripts:
-      - name: Install Flutter
-        script: |
-          git clone -b stable https://github.com/flutter/flutter.git
-          export PATH="\$PATH:\$PWD/flutter/bin"
-      - name: Run Flutter pub get
-        script: flutter pub get
-      - name: Build APK
-        script: flutter build apk --release
-    artifacts:
-      - build/app/outputs/flutter-apk/app-release.apk
-    environment:
-      flutter: stable
-      android: latest
+# Codemagic Configuration
+
+# This file is used for configuring the Codemagic CI/CD for Flutter projects.
+
+# Setting up environment variables
+# Add your secret variables in the Codemagic dashboard.
+# Go to "Settings" > "Environment variables" in Codemagic dashboard to add these variables as secrets:
+# 1. OPENAI_API_KEY: Your OpenAI API Key
+
+# Define the environment variables
+
+env:
+  OPENAI_API_KEY: $OPENAI_API_KEY
+
+# Use the environment variable in your build command
+# Updating the flutter build command to include the OPENAI_API_KEY
+command:
+  flutter build apk --dart-define=OPENAI_API_KEY=$OPENAI_API_KEY
