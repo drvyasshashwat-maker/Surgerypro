@@ -1,18 +1,18 @@
-# Codemagic Configuration
-
-# This file is used for configuring the Codemagic CI/CD for Flutter projects.
-
-# Setting up environment variables
-# Add your secret variables in the Codemagic dashboard.
-# Go to "Settings" > "Environment variables" in Codemagic dashboard to add these variables as secrets:
-# 1. OPENAI_API_KEY: Your OpenAI API Key
-
-# Define the environment variables
-
-env:
-  OPENAI_API_KEY: $OPENAI_API_KEY
-
-# Use the environment variable in your build command
-# Updating the flutter build command to include the OPENAI_API_KEY
-command:
-  flutter build apk --dart-define=OPENAI_API_KEY=$OPENAI_API_KEY
+workflows:
+  surgerypro-build:
+    name: Surgerypro Android Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - openai_credentials # This must match the Group Name you set in UI
+      flutter: stable
+    scripts:
+      - name: Get dependencies
+        script: |
+          flutter pub get
+      - name: Build Flutter APK
+        script: |
+          flutter build apk --release --dart-define=OPENAI_API_KEY=$OPENAI_API_KEY
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
