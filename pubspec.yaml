@@ -1,4 +1,4 @@
 dependencies:
   flutter:
     sdk: flutter
-  flutter_dotenv: ^5.0.0
+  flutter_dotenv: >=3.0.0 <4.0.0
