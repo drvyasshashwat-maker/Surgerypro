@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        // Use 7.4.2 to keep the database stable
+        // Use 7.4.2 to keep Isar stable
         classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -19,8 +19,7 @@ allprojects {
     }
 }
 
-// THE PERMANENT NAMESPACE FIX
-// This loop finds 'isar_flutter_libs' and gives it an ID badge automatically
+// THIS IS THE CRITICAL FIX FOR YOUR ERROR
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
@@ -32,5 +31,3 @@ subprojects {
         }
     }
 }
-
-
