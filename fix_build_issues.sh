@@ -24,26 +24,7 @@ if [ -f "$ISAR_BUILD_GRADLE" ]; then
       fi
     fi
 
-    # Write a separate Python script to avoid quoting issues
-    cat > /tmp/patch_isar.py << PYEOF
-import sys
-
-gradle_path = sys.argv[1]
-namespace = sys.argv[2]
-
-with open(gradle_path, 'r') as f:
-    content = f.read()
-
-if 'namespace' not in content:
-    content = content.replace('android {', 'android {\n    namespace "' + namespace + '"', 1)
-    with open(gradle_path, 'w') as f:
-        f.write(content)
-    print("Namespace injected successfully.")
-else:
-    print("Namespace already exists.")
-PYEOF
-
-    python3 /tmp/patch_isar.py "$ISAR_BUILD_GRADLE" "$NAMESPACE"
+    python3 patch_isar.py "$ISAR_BUILD_GRADLE" "$NAMESPACE"
     echo "Patched successfully."
   fi
 else
