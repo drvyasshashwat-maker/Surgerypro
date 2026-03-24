@@ -12,7 +12,9 @@ workflows:
       - name: Get dependencies
         script: flutter pub get
       - name: Rebuild Android project
-        script: flutter create . --platforms android --force
+        script: |
+          rm-rf android
+          flutter create . --platforms android
       - name: Build Flutter APK
         script: | 
           flutter build apk --release \
