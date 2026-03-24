@@ -12,7 +12,7 @@ workflows:
       - name: Get dependencies
         script: flutter pub get
       - name: Upgrade Android project
-        script: flutter create . --platforms android
+        script: flutter create . --platforms android --force
       - name: Build Flutter APK
         script: | 
           flutter build apk --release \
