@@ -10,10 +10,11 @@ workflows:
       flutter: stable
     scripts:
       - name: Get dependencies
-        script: |
-          flutter pub get
+        script: flutter pub get
+      - name: Upgrade Android project
+        script: flutter create . --platforms android
       - name: Build Flutter APK
-        script: |
+        script: | 
           flutter build apk --release \
             --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
     artifacts:
