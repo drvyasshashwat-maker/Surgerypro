@@ -1,8 +1,4 @@
 dependencies:
   flutter:
     sdk: flutter
-  # The new standard for Flutter AI in 2026
-  firebase_core: ^4.10.0
-  firebase_ai: ^1.2.0 
-  # Optional: Keep this if you aren't ready to migrate to Firebase yet
-  # google_generative_ai: ^1.1.0
+  google_generative_ai: ^1.1.0  # The 2026 stable version
