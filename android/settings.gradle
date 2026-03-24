@@ -1,4 +1,14 @@
 include ':app'
 
-// Force the namespace for the database tool specifically
-project(':isar_flutter_libs').projectDir = new File(settingsDir, '../.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/android')
+rootProject.name = 'surgerypro'
+
+// This automatically finds and fixes the ID badge for ANY tool that is missing it
+gradle.beforeProject { project ->
+    if (project.hasProperty('android')) {
+        project.android {
+            if (namespace == null) {
+                namespace project.group
+            }
+        }
+    }
+}
