@@ -1,15 +1,4 @@
 include ':app'
->>>>>>> 8d6f4b7701594842782bf1af5356ab7a997dea1d
 
-// This special "Clerk" assigns the missing ID to the database tool
-def isarPath = '../.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/android'
-def isarFile = new File(settingsDir, isarPath)
-
-if (isarFile.exists()) {
-    include ':isar_flutter_libs'
-    project(':isar_flutter_libs').projectDir = isarFile
-}
-
-// FORCE THE ID (NAMESPACE)
-rootProject.name = 'surgerypro'
-
+// Force the namespace for the database tool specifically
+project(':isar_flutter_libs').projectDir = new File(settingsDir, '../.pub-cache/hosted/pub.dev/isar_flutter_libs-3.1.0+1/android')
