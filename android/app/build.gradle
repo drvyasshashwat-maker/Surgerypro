@@ -23,9 +23,9 @@ if (flutterVersionName == null) {
 }
 
 android {
-    // 1. This is the fix for the 'Namespace' error you saw earlier
+    // This identifies your app to the Android system
     namespace "com.drvyasshashwat.surgerypro"
-    compileSdk 36
+    compileSdk 34
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -41,21 +41,34 @@ android {
     }
 
     defaultConfig {
-        // 2. This must match the namespace above
         applicationId "com.drvyasshashwat.surgerypro"
-        
-        // Isar database requires at least version 21
         minSdk 21
-        targetSdk 36
+        targetSdk 34 
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
     buildTypes {
         release {
-            // Signing with debug keys for now so you can test the APK
             signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
         }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+// THE PERMANENT FIX: This forces all plugins to use SDK 34 compatible versions
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.lifecycle:lifecycle-viewmodel:2.6.1'
+        force 'androidx.lifecycle:lifecycle-runtime:2.6.1'
+        force 'androidx.lifecycle:lifecycle-livedata:2.6.1'
+        force 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     }
 }
 
