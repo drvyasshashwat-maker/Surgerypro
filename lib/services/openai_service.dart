@@ -1,15 +1,11 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
-class OpenAIService {
-  final String apiKey;
+// Access the key you defined in the build script
+const apiKey = String.fromEnvironment('GEMINI_API_KEY');
 
-  OpenAIService() : apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
-  
-  void validateApiKey() {
-    if (apiKey.isEmpty) {
-      throw Exception('API key must not be empty');
-    }
-  }
-}
+final model = GenerativeModel(model: 'gemini-3.1-flash', apiKey: apiKey);
 
-// Add any additional methods and logic for your OpenAI service here.
+// To send a message:
+final content = [Content.text('Hello Gemini, help me with this surgery case...')];
+final response = await model.generateContent(content);
+print(response.text);
