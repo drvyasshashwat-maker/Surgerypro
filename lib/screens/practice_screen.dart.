@@ -1,0 +1,96 @@
+import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
+import '../models/surgical_question.dart';
+
+class PracticeScreen extends StatefulWidget {
+  final Isar isar;
+  PracticeScreen({required this.isar});
+
+  @override
+  _PracticeScreenState createState() => _PracticeScreenState();
+}
+
+class _PracticeScreenState extends State<PracticeScreen> {
+  List<SurgicalQuestion> _questions = [];
+  int _currentIndex = 0;
+  bool _showAnswer = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions();
+  }
+
+  // This pulls all saved questions from your phone's memory
+  Future<void> _loadQuestions() async {
+    final questions = await widget.isar.surgicalQuestions.where().findAll();
+    setState(() {
+      _questions = questions;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Practice Mode")),
+        body: Center(child: Text("No questions saved yet. Upload a book first!")),
+      );
+    }
+
+    final q = _questions[_currentIndex];
+
+    return Scaffold(
+      appBar: AppBar(title: Text("Question ${_currentIndex + 1} of ${_questions.length}")),
+      body: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(q.category, style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Text(q.questionText, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+            SizedBox(height: 20),
+            
+            // Generate buttons for each MCQ option
+            ...List.generate(q.options.length, (index) => Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _showAnswer && index == q.correctOptionIndex ? Colors.green[100] : null,
+                  minimumSize: Size(double.infinity, 50),
+                ),
+                onPressed: () => setState(() => _showAnswer = true),
+                child: Text(q.options[index]),
+              ),
+            )),
+
+            if (_showAnswer) ...[
+              Divider(height: 40),
+              Text("Explanation:", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(q.explanation),
+              Text("\nSource: ${q.sourceBook}", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+            ],
+            
+            Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: _currentIndex > 0 ? () => setState(() { _currentIndex--; _showAnswer = false; }) : null,
+                  child: Text("Previous"),
+                ),
+                ElevatedButton(
+                  onPressed: _currentIndex < _questions.length - 1 
+                    ? () => setState(() { _currentIndex++; _showAnswer = false; }) 
+                    : null,
+                  child: Text("Next"),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
