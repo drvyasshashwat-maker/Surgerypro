@@ -1,4 +1,4 @@
-# Surgerypro - Flutter Android Build with Gemini 3.1
+# Surgerypro - Flutter Android Build
 workflows:
   surgerypro-build:
     name: Surgerypro Android Build
@@ -6,7 +6,7 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       groups:
-        - openai_credentials # Ensure this group exists in Codemagic UI
+        - api_keys # This now matches your UI settings
       flutter: stable
     scripts:
       - name: Get dependencies
