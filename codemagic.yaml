@@ -15,5 +15,5 @@ scripts:
     script: |
       flutter build apk --release \
         --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
-        artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+artifacts:
+      - build/**/outputs/**/*.apk
