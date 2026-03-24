@@ -25,7 +25,7 @@ if (flutterVersionName == null) {
 android {
     // 1. This is the fix for the 'Namespace' error you saw earlier
     namespace "com.drvyasshashwat.surgerypro"
-    compileSdk 35
+    compileSdk 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -46,7 +46,7 @@ android {
         
         // Isar database requires at least version 21
         minSdk 21
-        targetSdk 35
+        targetSdk 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
