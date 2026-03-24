@@ -1,42 +1,26 @@
+# Surgerypro - Flutter Android Build
 workflows:
-  android-release:
-    name: Android Release
-    max_build_duration: 60
-    environment:
-      flutter: stable
-      android_signing:
-        - keystore_reference  # replace with your keystore reference
-
-    scripts:
-      # -------------------------------------------------------
-      # Step 1: Get Flutter dependencies first (populates pub-cache)
-      # -------------------------------------------------------
-      - name: Get Flutter packages
+ surgerypro-build:
+   name: Surgerypro Android Build
+   max_build_duration: 60
+   instance_type: mac_mini_m1
+   environment:
+     groups:
+       - api_keys # This now matches your UI settings
+     flutter: stable
+   scripts:
+     - name: Get dependencies
+       script: flutter pub get
+     - name: Rebuild Android project
+       scripts:
+      - name: Get dependencies
         script: flutter pub get
-
-      # -------------------------------------------------------
-      # Step 2: Run the fix AFTER pub get (isar is now in cache)
-      # -------------------------------------------------------
       - name: Fix isar namespace & Kotlin version
         script: bash fix_build_issues.sh
-
-      # -------------------------------------------------------
-      # Step 3: Build the APK (or AAB for Play Store)
-      # -------------------------------------------------------
       - name: Build Flutter APK
         script: |
           flutter build apk --release \
-            --dart-define=FLUTTER_BUILD_NUMBER=$BUILD_NUMBER
+            --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
 
-      # Alternatively, build AAB for Play Store:
-      # - name: Build Flutter AAB
-      #   script: flutter build appbundle --release
-
-    artifacts:
-      - build/app/outputs/flutter-apk/*.apk
-      # - build/app/outputs/bundle/release/*.aab
-
-    publishing:
-      email:
-        recipients:
-          - vyas.shashwat@email.com  # replace with your email
+   artifacts:
+     - build/app/outputs/flutter-apk/*.apk
