@@ -1,23 +1,42 @@
-# Surgerypro - Flutter Android Build
 workflows:
-  surgerypro-build:
-    name: Surgerypro Android Build
+  android-release:
+    name: Android Release
     max_build_duration: 60
-    instance_type: mac_mini_m1
     environment:
-      groups:
-        - api_keys # This now matches your UI settings
       flutter: stable
+      android_signing:
+        - keystore_reference  # replace with your keystore reference
+
     scripts:
-      - name: Get dependencies
+      # -------------------------------------------------------
+      # Step 1: Get Flutter dependencies first (populates pub-cache)
+      # -------------------------------------------------------
+      - name: Get Flutter packages
         script: flutter pub get
-      - name: Rebuild Android project
-        script: |
-          rm-rf android
-          flutter create . --platforms android
+
+      # -------------------------------------------------------
+      # Step 2: Run the fix AFTER pub get (isar is now in cache)
+      # -------------------------------------------------------
+      - name: Fix isar namespace & Kotlin version
+        script: bash fix_build_issues.sh
+
+      # -------------------------------------------------------
+      # Step 3: Build the APK (or AAB for Play Store)
+      # -------------------------------------------------------
       - name: Build Flutter APK
-        script: | 
+        script: |
           flutter build apk --release \
-            --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
+            --dart-define=FLUTTER_BUILD_NUMBER=$BUILD_NUMBER
+
+      # Alternatively, build AAB for Play Store:
+      # - name: Build Flutter AAB
+      #   script: flutter build appbundle --release
+
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
+      # - build/app/outputs/bundle/release/*.aab
+
+    publishing:
+      email:
+        recipients:
+          - vyas.shashwat@email.com  # replace with your email
