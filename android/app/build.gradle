@@ -1,14 +1,14 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
+    id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.withInputStream { stream ->
-        localProperties.load(stream)
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
     }
 }
 
@@ -23,9 +23,22 @@ if (flutterVersionName == null) {
 }
 
 android {
-    // This identifies your app to the Android system
-    namespace "com.drvyasshashwat.surgerypro"
+    namespace "com.example.surgmanus_ai"
     compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.surgmanus_ai"
+        minSdk 21
+        targetSdk 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -35,61 +48,8 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-
-    defaultConfig {
-        applicationId "com.drvyasshashwat.surgerypro"
-        minSdk 21
-        targetSdk 34 
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-    }
-
-    buildTypes {
-        release {
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-            shrinkResources false
-        }
-    }
-
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
-    }
-}
-
-// THE PERMANENT FIX: This forces all plugins to use SDK 34 compatible versions
-configurations.all {
-    resolutionStrategy {
-        force 'androidx.lifecycle:lifecycle-viewmodel:2.6.1'
-        force 'androidx.lifecycle:lifecycle-runtime:2.6.1'
-        force 'androidx.lifecycle:lifecycle-livedata:2.6.1'
-        force 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    }
 }
 
 flutter {
     source '../..'
 }
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0"
-}
-// AUTOMATIC ID BADGE MAKER
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                if (namespace == null) {
-                    namespace project.group
-                }
-            }
-        }
-    }
-}
-
-
