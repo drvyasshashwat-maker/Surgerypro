@@ -1,0 +1,9 @@
+include ':app'
+
+rootProject.name = 'surgerypro'
+
+gradle.beforeProject { project ->
+    if (project.name == 'isar_flutter_libs') {
+        project.ext.set("android.namespace", "com.isar.isar_flutter_libs")
+    }
+}
