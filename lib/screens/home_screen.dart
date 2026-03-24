@@ -1,61 +1,79 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:isar/isar.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../services/gemini_service.dart';
+import 'practice_screen.dart'; // Ensure this file exists in lib/screens/
 
 class HomeScreen extends StatefulWidget {
+  final Isar isar;
+  HomeScreen({required this.isar});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final GeminiService _aiService = GeminiService();
-  String _aiResponse = "Upload a surgical textbook to start your study session.";
+  late GeminiService _aiService;
+  String _statusMessage = "Ready to build your surgical knowledge base.";
   bool _isLoading = false;
 
-  // 1. Function to extract text from the PDF file
-  Future<String> _extractTextFromPdf(String filePath) async {
+  @override
+  void initState() {
+    super.initState();
+    // Pass the database to the AI service so it can save questions
+    _aiService = GeminiService(widget.isar);
+  }
+
+  // Helper: Extracts words from the physical PDF file
+  Future<String> _readPdf(String filePath) async {
     try {
       final bytes = await File(filePath).readAsBytes();
       final PdfDocument document = PdfDocument(inputBytes: bytes);
-      
-      // Extracts text from all pages of the book
       String text = PdfTextExtractor(document).extractText();
-      document.dispose(); // Critical for saving memory on your phone
+      document.dispose();
       return text;
     } catch (e) {
-      return "Error reading PDF content: $e";
+      return "Error: $e";
     }
   }
 
-  // 2. Main function to pick the book and send it to Gemini
-  Future<void> _pickAndProcessBook() async {
+  // Logic: Picks book, extracts text, sends to Gemini, and saves to Isar
+  Future<void> _handleBookUpload() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
 
     if (result != null && result.files.single.path != null) {
-      setState(() => _isLoading = true);
-      
+      setState(() {
+        _isLoading = true;
+        _statusMessage = "Reading textbook...";
+      });
+
       try {
-        // Extract the actual medical text
-        String fullText = await _extractTextFromPdf(result.files.single.path!);
+        final String path = result.files.single.path!;
+        final String fileName = result.files.single.name;
         
-        // Take a high-yield snippet (first 6000 characters) for the AI to analyze
+        // 1. Extract text
+        String fullText = await _readPdf(path);
+        
+        // 2. Send snippet to Gemini (limited to 6000 chars for efficiency)
         String snippet = fullText.length > 6000 ? fullText.substring(0, 6000) : fullText;
         
-        // Send to your Gemini Service
-        final response = await _aiService.getSurgeryStudyMaterial(snippet);
+        setState(() => _statusMessage = "Gemini is generating MCQs...");
         
+        // 3. AI Service processes and saves directly to Database
+        await _aiService.processAndSaveBookContent(snippet, fileName);
+
         setState(() {
-          _aiResponse = response;
+          _statusMessage = "Success! New questions added from $fileName";
           _isLoading = false;
         });
       } catch (e) {
         setState(() {
-          _aiResponse = "Processing error: $e";
+          _statusMessage = "System Error: $e";
           _isLoading = false;
         });
       }
@@ -67,64 +85,84 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Surgery Pro: MRCS & FRCS"),
-        backgroundColor: Colors.blueAccent,
+        centerTitle: true,
+        elevation: 4,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+      body: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Surgical Icon / Logo Area
+            Icon(Icons.health_and_safety, size: 80, color: Colors.blueAccent),
+            SizedBox(height: 20),
             Text(
               "Surgical Knowledge Engine",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text("Upload your books (Bailey & Love, Sabiston, etc.) to generate MCQs."),
-            SizedBox(height: 30),
-            
-            Center(
-              child: _isLoading 
-                ? Column(
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 10),
-                      Text("Gemini is analyzing your textbook..."),
-                    ],
-                  )
-                : ElevatedButton.icon(
-                    onPressed: _pickAndProcessBook,
-                    icon: Icon(Icons.picture_as_pdf),
-                    label: Text("UPLOAD SURGERY BOOK"),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                    ),
-                  ),
-            ),
-            
             SizedBox(height: 40),
-            Divider(),
+
+            if (_isLoading) ...[
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+            ],
+
             Text(
-              "Study Material & MCQs:",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+              _statusMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
             ),
-            SizedBox(height: 15),
-            
-            // The area where the AI questions and notes will appear
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(10),
+
+            SizedBox(height: 50),
+
+            // Action Buttons
+            if (!_isLoading) ...[
+              // Upload Button
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: _handleBookUpload,
+                  icon: Icon(Icons.upload_file),
+                  label: Text("UPLOAD TEXTBOOK"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ),
-              child: SelectableText(
-                _aiResponse,
-                style: TextStyle(fontSize: 15, height: 1.5),
+              
+              SizedBox(height: 16),
+
+              // Practice Button
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PracticeScreen(isar: widget.isar),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.play_arrow),
+                  label: Text("START PRACTICE MODE"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[800],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 }
+
