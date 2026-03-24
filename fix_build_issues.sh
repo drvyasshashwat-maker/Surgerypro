@@ -35,8 +35,13 @@ if [ -f "$ISAR_BUILD_GRADLE" ]; then
 
     echo "Injecting namespace '$NAMESPACE' into isar build.gradle..."
 
-    # Insert namespace inside the android { } block
-    sed -i.bak "/^android {/a\\    namespace '$NAMESPACE'" "$ISAR_BUILD_GRADLE"
+    python3 -c "
+    import re, sys
+    content = open('$ISAR_BUILD_GRADLE').read()
+    patched = content.replace('android {', 'android {\n    namespace \"$NAMESPACE\"', 1)
+    open('$ISAR_BUILD_GRADLE', 'w').write(patched)
+    “
+
 
     echo "Patched isar build.gradle successfully."
     echo "--- Patched content (first 40 lines) ---"
