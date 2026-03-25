@@ -1,164 +1,221 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:isar/isar.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
-import '../services/gemini_service.dart';
-import 'practice_screen.dart'; // Ensure this file exists in lib/screens/
+import '../services/database_service.dart';
+import '../theme.dart';
+import 'quiz_screen.dart';
+import 'library_screen.dart';
+import 'notes_screen.dart';
+import 'images_screen.dart';
+import 'settings_screen.dart';
+import 'upload_screen.dart';
+import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Isar isar;
-  HomeScreen({required this.isar});
+  const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late GeminiService _aiService;
-  String _statusMessage = "Ready to build your surgical knowledge base.";
-  bool _isLoading = false;
+  int _currentIndex = 0;
+  Map<String, int> _stats = {};
+
+  final _screens = const [
+    _DashboardTab(),
+    QuizScreen(),
+    LibraryScreen(),
+    NotesScreen(),
+    ImagesScreen(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    // Pass the database to the AI service so it can save questions
-    _aiService = GeminiService(widget.isar);
+    _loadStats();
   }
 
-  // Helper: Extracts words from the physical PDF file
-  Future<String> _readPdf(String filePath) async {
-    try {
-      final bytes = await File(filePath).readAsBytes();
-      final PdfDocument document = PdfDocument(inputBytes: bytes);
-      String text = PdfTextExtractor(document).extractText();
-      document.dispose();
-      return text;
-    } catch (e) {
-      return "Error: $e";
-    }
-  }
-
-  // Logic: Picks book, extracts text, sends to Gemini, and saves to Isar
-  Future<void> _handleBookUpload() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        _isLoading = true;
-        _statusMessage = "Reading textbook...";
-      });
-
-      try {
-        final String path = result.files.single.path!;
-        final String fileName = result.files.single.name;
-        
-        // 1. Extract text
-        String fullText = await _readPdf(path);
-        
-        // 2. Send snippet to Gemini (limited to 6000 chars for efficiency)
-        String snippet = fullText.length > 6000 ? fullText.substring(0, 6000) : fullText;
-        
-        setState(() => _statusMessage = "Gemini is generating MCQs...");
-        
-        // 3. AI Service processes and saves directly to Database
-        await _aiService.processAndSaveBookContent(snippet, fileName);
-
-        setState(() {
-          _statusMessage = "Success! New questions added from $fileName";
-          _isLoading = false;
-        });
-      } catch (e) {
-        setState(() {
-          _statusMessage = "System Error: $e";
-          _isLoading = false;
-        });
-      }
-    }
+  Future<void> _loadStats() async {
+    final stats = await DatabaseService.getStats();
+    if (mounted) setState(() => _stats = stats);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Surgery Pro: MRCS & FRCS"),
-        centerTitle: true,
-        elevation: 4,
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.quiz_rounded), label: 'Quiz'),
+          BottomNavigationBarItem(icon: Icon(Icons.library_books_rounded), label: 'Library'),
+          BottomNavigationBarItem(icon: Icon(Icons.notes_rounded), label: 'Notes'),
+          BottomNavigationBarItem(icon: Icon(Icons.image_rounded), label: 'Images'),
+        ],
       ),
-      body: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(24),
+    );
+  }
+}
+
+class _DashboardTab extends StatefulWidget {
+  const _DashboardTab();
+
+  @override
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<_DashboardTab> {
+  Map<String, int> _stats = {};
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final stats = await DatabaseService.getStats();
+    if (mounted) setState(() { _stats = stats; _loading = false; });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.surface,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _load,
+          color: AppTheme.accent,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('SurgeryPro', style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: AppTheme.accent, letterSpacing: 1,
+                        )),
+                        const Text('MRCS · FRCS · NHS', style: TextStyle(
+                          color: AppTheme.textSecondary, fontSize: 13, letterSpacing: 2,
+                        )),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chat_bubble_rounded, color: AppTheme.accent),
+                          onPressed: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const ChatScreen())),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.settings_rounded, color: AppTheme.textSecondary),
+                          onPressed: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Stats Grid
+                _loading
+                  ? const Center(child: CircularProgressIndicator(color: AppTheme.accent))
+                  : GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.5,
+                      children: [
+                        _StatCard('MCQ Questions', _stats['mcqs'] ?? 0, Icons.quiz_rounded, AppTheme.accent),
+                        _StatCard('Study Notes', _stats['notes'] ?? 0, Icons.notes_rounded, const Color(0xFF7B2FBE)),
+                        _StatCard('Clinical Images', _stats['images'] ?? 0, Icons.image_rounded, const Color(0xFF2DC653)),
+                        _StatCard('Books Uploaded', _stats['books'] ?? 0, Icons.library_books_rounded, AppTheme.warning),
+                      ],
+                    ),
+                const SizedBox(height: 24),
+
+                // Quick Actions
+                Text('Quick Start', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                _QuickActionGrid(),
+                const SizedBox(height: 24),
+
+                // Upload Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.upload_file_rounded),
+                    label: const Text('Upload Book / PDF / Image'),
+                    onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const UploadScreen())).then((_) => _load()),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppTheme.primary,
+                      side: const BorderSide(color: AppTheme.accent),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Category breakdown
+                if ((_stats['mcqs'] ?? 0) > 0) ...[
+                  const SizedBox(height: 12),
+                  Text('Content by Category', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 12),
+                  Row(children: AppTheme.categories.skip(1).map((cat) =>
+                    Expanded(child: _CategoryChip(cat))
+                  ).toList()),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color color;
+
+  const _StatCard(this.label, this.value, this.icon, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Surgical Icon / Logo Area
-            Icon(Icons.health_and_safety, size: 80, color: Colors.blueAccent),
-            SizedBox(height: 20),
-            Text(
-              "Surgical Knowledge Engine",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Icon(icon, color: color, size: 28),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value.toString(), style: TextStyle(
+                  color: color, fontSize: 24, fontWeight: FontWeight.w800,
+                )),
+                Text(label, style: const TextStyle(
+                  color: AppTheme.textSecondary, fontSize: 12,
+                )),
+              ],
             ),
-            SizedBox(height: 40),
-
-            if (_isLoading) ...[
-              CircularProgressIndicator(),
-              SizedBox(height: 20),
-            ],
-
-            Text(
-              _statusMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-            ),
-
-            SizedBox(height: 50),
-
-            // Action Buttons
-            if (!_isLoading) ...[
-              // Upload Button
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton.icon(
-                  onPressed: _handleBookUpload,
-                  icon: Icon(Icons.upload_file),
-                  label: Text("UPLOAD TEXTBOOK"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-              
-              SizedBox(height: 16),
-
-              // Practice Button
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PracticeScreen(isar: widget.isar),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.play_arrow),
-                  label: Text("START PRACTICE MODE"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[800],
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -166,3 +223,67 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class _QuickActionGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final actions = [
+      ('Practice MCQs', Icons.check_circle_rounded, AppTheme.accent, 'Practice'),
+      ('Timed Quiz', Icons.timer_rounded, AppTheme.warning, 'Timed'),
+      ('Flashcards', Icons.style_rounded, const Color(0xFF7B2FBE), 'Flashcard'),
+      ('Exam Mode', Icons.school_rounded, AppTheme.error, 'Exam'),
+    ];
+
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 2.2,
+      children: actions.map((a) => InkWell(
+        onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => QuizScreen(initialMode: a.$4))),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: a.$3.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: a.$3.withOpacity(0.3)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(a.$2, color: a.$3, size: 22),
+              const SizedBox(width: 10),
+              Expanded(child: Text(a.$1, style: TextStyle(
+                color: a.$3, fontWeight: FontWeight.w600, fontSize: 13,
+              ))),
+            ],
+          ),
+        ),
+      )).toList(),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String category;
+  const _CategoryChip(this.category);
+
+  @override
+  Widget build(BuildContext context) {
+    final color = AppTheme.categoryColor(category);
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Text(category, style: TextStyle(
+        color: color, fontWeight: FontWeight.w700, fontSize: 13,
+      ), textAlign: TextAlign.center),
+    );
+  }
+}
