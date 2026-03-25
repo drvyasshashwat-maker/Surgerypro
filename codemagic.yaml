@@ -10,6 +10,8 @@ workflows:
     scripts:
       - name: Get dependencies
         script: flutter pub get
+      - name: Generate Isar code
+        script: dart run build_runner build --delete-conflicting-outputs
       - name: Build Flutter APK
         script: |
           flutter build apk --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
