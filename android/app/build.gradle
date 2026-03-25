@@ -17,21 +17,20 @@ def flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "
 def flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
-    namespace "YOUR.PACKAGE.NAME"        // change to your package
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    namespace "com.drvyasshashwat.surgerypro"
+    compileSdkVersion 33
 
     defaultConfig {
-        applicationId "YOUR.PACKAGE.NAME" // change to your package
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutterVersionCode.toInteger()
-        versionName = flutterVersionName
+        applicationId "com.drvyasshashwat.surgerypro"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug   // replace with your release config later
+            signingConfig signingConfigs.debug
         }
     }
 }
