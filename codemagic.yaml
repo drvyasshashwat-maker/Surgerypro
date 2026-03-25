@@ -10,8 +10,8 @@ workflows:
     scripts:
       - name: Get dependencies
         script: flutter pub get
-      - name: Fix isar namespace and Kotlin version
-        script: bash fix_build_issues.sh
+      - name: Regenerate android folder
+        script: flutter create . --platforms android --org com.drvyasshashwat
       - name: Build Flutter APK
         script: |
           flutter build apk --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
