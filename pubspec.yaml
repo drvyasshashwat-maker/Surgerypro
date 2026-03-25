@@ -34,5 +34,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+flutter:
+  uses-material-design: true
+  # Only add this if you are integrating this project INTO a native Android app
+  # module:
+  #   androidX: true 
   assets:
     - assets/images/
